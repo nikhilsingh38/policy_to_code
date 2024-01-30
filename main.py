@@ -81,10 +81,10 @@ if uploaded_file:
     # Use langchain_helper to extract topics and generate rego code
     response = langchain_helper.generate_topics_and_rego_code_from_pdf(pdf_text)
 
-    if response:
-        # st.header(response['restaurant_name'].strip())
-        rego_code = response['menu_items']
-        # st.write("**Rego Code**")
+    # if response:
+    #     # st.header(response['restaurant_name'].strip())
+    #     rego_code = response['menu_items']
+    #     st.write("**Rego Code**")
         # st.write("-", rego_code)
 
 

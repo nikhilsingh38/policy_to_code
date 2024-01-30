@@ -2,3 +2,5 @@ openai
 langchain
 google-search-results
 streamlit
+pypdf2
+langchain_openai
