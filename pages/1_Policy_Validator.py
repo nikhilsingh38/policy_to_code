@@ -8,6 +8,7 @@ from pathlib import Path
 import base64
 
 
+
 st.set_page_config(page_title="Policy Validator", page_icon="📈")
 st.sidebar.markdown('''[<img src='data:image/png;base64,{}' class='img-fluid' width=32 height=32>](https://streamlit.io/)'''.format(img_to_bytes("./pwcLogo.png")), unsafe_allow_html=True)
 st.title("Policy and Code Compliance Checker")
