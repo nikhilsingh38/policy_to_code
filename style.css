@@ -1,0 +1,29 @@
+html,
+body,
+[class*="css"] {
+  font-family: inter;
+}
+
+.st-emotion-cache-keje6w {
+  background: white;
+  border-radius: 12px;
+  color: black;
+  padding: 12px 0px;
+  display: flex;
+  /* align-items: center; */
+  justify-content: center;
+}
+
+.st-emotion-cache-keje6w:first-child {
+  background: #3EC300;
+}
+
+.st-emotion-cache-keje6w:nth-child(2) {
+  background: #DD614A;
+}
+
+
+.st-emotion-cache-q49buc {
+  color: black;
+
+}

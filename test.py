@@ -1,17 +1,18 @@
 import streamlit as st
+import matplotlib.pyplot as plt
+from collections import Counter
 
-st.title('Select the Category of your policy:')
 
-# Create buttons for each policy category
-if st.button('RBAC'):
-    st.write('You selected RBAC.')
-if st.button('Network Standards'):
-    st.write('You selected Network Standards.')
-if st.button('API Authorization'):
-    st.write('You selected API Authorization.')
-if st.button('Role-base Access'):
-    st.write('You selected Role-base Access.')
+st.set_page_config(page_title="Mapping Demo", page_icon="🌍")
+# Define your data
+# Assuming style.css is properly configured for Streamlit
+with open('./style.css') as f:
+    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+    
+col1, col2 = st.columns(2)
+col1.metric("Yes", "2")
+col2.metric("No", "1")
+# col3.metric("dfd", "1")
 
-# Create a submit button
-if st.button('Submit'):
-    st.write('Your selection has been submitted.')
+# Display the table
+

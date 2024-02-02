@@ -1,127 +1,79 @@
-import streamlit as st
-from langchain_openai import ChatOpenAI
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
-from langchain.chains import SequentialChain
-from typing import List
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.vectorstores import FAISS
+# langchain_helper.py
 
-import os
-
-os.environ['OPENAI_API_KEY'] = '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'  # Replace with your OpenAI API key
-
-llm = ChatOpenAI(model="ft:gpt-3.5-turbo-0613:personal::8TSReyDR", temperature = 0.7)
-
-query_responses = []
+from openai import OpenAI as openai
+import PyPDF2
+from dotenv import load_dotenv
 
 
+# Set your OpenAI API key here
+# openai.api_key = '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'
+load_dotenv()
+client=openai()
 
-def extract_specific_topics(pdf_text: str, keywords: list) -> List[str]:
-    pdf_text_lower = pdf_text.lower()
-    matched_topics = [keyword for keyword in keywords if keyword.lower() in pdf_text_lower]
-    return matched_topics
+def extract_text_from_file(file):
+    # Implement text extraction logic from the file (PDF or text)
+    # You can use PyPDF2 for PDF files and handle text files accordingly
 
-def extract_topics_using_ai(pdf_text: str) -> List[str]:
-    # Use generative AI to extract topics from the PDF text
-    # Implement the logic based on your requirements using langchain or other methods
-    # Placeholder logic: Split the text into paragraphs and treat each paragraph as a topic
-    topics = [topic.strip() for topic in pdf_text.split('\n') if topic.strip()]
-    return topics
+    file_extension = file.name.split(".")[-1].lower()
 
-
-def generate_rego_code_for_topic(topic, text):
-    
-    global query_responses
-    # Check if query already exists in stored responses
-    
-        
-    prompt_template_network = PromptTemplate(
-        input_variables=['topic'],
-        template=f"Given the {topic} standard, define the policy details such as name, type, subnet, security group, and firewall rules(if present) using the pdf."
-    )
-
-    network_chain = LLMChain(llm=llm, prompt=prompt_template_network, output_key="network_details")
-    query = f"You are an assistant that takes input as a policy and gives output as Rego code only. write a {topic} rego code and take its context from {text} if it's relatable to that topic otherwise take context from your own. Send only rego code."
-    
-    for stored_query, response in query_responses:
-        if query == stored_query:
-            # Return the stored response for the existing query
-            return query,response   
-    # Chain 2: Generate Rego Code
-    prompt_template_rego = PromptTemplate(
-        input_variables=['network_details'],
-        template=f"You are an assistant that takes input as a policy and gives output as Rego code only. write a {topic} rego code and take its context from {text} if it's relatable to that topic otherwise take context from your own. Send only rego code."
-    )
-
-    rego_code_chain = LLMChain(llm=llm, prompt=prompt_template_rego, output_key="rego_code")
-
-    # Vectorize the text
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=200,
-        length_function=len
-    )
-    chunks = text_splitter.split_text(text=text)
-
-    # Embeddings
-    embeddings = OpenAIEmbeddings()
-    VectorStore = FAISS.from_texts(chunks, embedding=embeddings)
-    docs = VectorStore.similarity_search(query=query, k=3)
-    # print(docs)
-    # Add vectorized text to the input for the chains
-    processed_text = docs[0]  # or a summary of docs[0]
-
-    # Ensure the processed text is within the token limit
-    # You may need to truncate or further summarize the text here
-
-    # Create the SequentialChain with adjusted input
-    chain = SequentialChain(
-        chains=[network_chain, rego_code_chain],
-        input_variables=['topic', 'processed_text'],
-        output_variables=["rego_code"]
-    )
-
-    # Execute the chain with the input data
-    input_data = {'topic': topic, 'processed_text': processed_text}
-    response = chain(input_data)
-    # Retrieve the results
-    network_details = response.get("network_details", {})
-    rego_code = response.get("rego_code", "")
-    query_responses.append((query, rego_code))
-
-    # Return the results
-    return network_details, rego_code
-
-def generate_topics_and_rego_code_from_pdf(pdf_text):
-    keywords = ["access control", "network standards", "rbac", "kubernetes", "network"]
-    topics = extract_specific_topics(pdf_text, keywords)
-
-    #Convert topics to a format suitable for user selection
-    topics_for_selection = ["Please select a topic"] + [(topic) for topic in topics]
-
-    #Allow the user to select a topic
-    selected_topic = st.sidebar.selectbox("Pick a Standard", topics_for_selection)
-
-    #Check if a topic is selected
-    if selected_topic != "Please select a topic":
-        # Use the selected topic to generate rego code
-        response = generate_rego_code_for_topic(selected_topic, pdf_text)
-        
-        # Display the rego code
-        # st.header(response[0].strip())  # Access the first element of the tuple (standard_name)
-        menu_items = response[1]
-        st.write("**Rego Code**")
-        st.code(menu_items)
-        # print(query_responses[1])
-        # print(menu_items)
+    if file_extension == "pdf":
+        return extract_text_from_pdf(file)
+    elif file_extension == "txt":
+        return extract_text_from_text_file(file)
     else:
-        st.info("Please select a topic to generate the rego code.")
+        # Handle other file types if needed
+        return ""
 
-if __name__ == "__main__":
-    pdf_text_example = "This is a sample PDF text with multiple topics.\nTopic 1: Network Standards\nTopic 2: RBAC\nTopic 3: Access Control\nTopic 4: Kubernetes"
-    generate_topics_and_rego_code_from_pdf(pdf_text_example)
+def extract_text_from_pdf(file):
+    text = ""
+    pdf_reader = PyPDF2.PdfReader(file)
+    for page_num in range(len(pdf_reader.pages)):
+        page = pdf_reader.pages[page_num]
+        text += page.extract_text()
+    return text
 
+def extract_text_from_text_file(file):
+    return file.read()
 
+def check_compliance_with_openai(policy_text, code_text):
+    # Use OpenAI to compare policy and code
+    # Implement your OpenAI API call logic for code comparison
+    openai_response = client.chat.completions.create(  # Use the chat endpoint
+    model="gpt-4",
+    messages=[
+        {
+            "role": "system",
+            "content":f"Your an rego code policy validator you job is to check if the rego code adhere the policy and detail explain of why it doesn't adhere List down the policy and tell if it is Adhere or not\n\nPolicy:\n{policy_text}\n\nCode:\n{code_text} if the {policy_text} doesn't found with even a single one in {code_text} says it is not relavant file policy's doesn't replicate in the rego code, give me output in this format 3 columns this is an example don't replicate in the output 1st column Policy Statement 2nd column Adhere or Not Only(Not Yes or No) 3rd column for Reason 4th Column for which rego code line it is referring. For Each Policy should be in a table format no explanation only the table only strictly",
+        }
+        ]
+    )
+    countofadhere = client.chat.completions.create(  # Use the chat endpoint
+    model="gpt-4",
+    messages=[
+        {
+            "role": "system",
+            "content":f"Your an rego code policy validator you job is to check if the rego code adhere or doesn't adhere Give me an count of much Adhere or not \n\nPolicy:\n{policy_text}\n\nCode:\n{code_text} give me output in this format Adhere: 2 Doesn't: 1  give output as a python dictionary it is an example don't replicate Don't give any explaination only the list output strictly",
+        }
+        ]
+    )
+    # openai_response = openai.Completion.create(
+    #     engine="gpt-3.5-turbo-instruct",
+    #     temperature=0.7,
+    #     prompt=f"Your an rego code policy validator you job is to check if the rego code adhere the policy and detail explain of why it doesn't adhere List down the policy and tell if it is Adhere or not\n\nPolicy:\n{policy_text}\n\nCode:\n{code_text} give me output in this format this is an example don't replicate in the output 1. Policy Statement - Adhere 2. Policy Statement - Doesn't Adhere and another column for why it doesn't adhere, For Each Policy in a table format strictly",
+    #     max_tokens=1000
+    # )
+    # countofadhere = client.chat.completions.create(
+    #     engine="gpt-3.5-turbo-instruct",
+    #     temperature=0.7,
+    #     prompt=f"Your an rego code policy validator you job is to check if the rego code adhere the policy and detail explain of why it doesn't adhere Give me an count of much Adhere or not \n\nPolicy:\n{policy_text}\n\nCode:\n{code_text} give me output in this format this is an example don't replicate in the output Adhere: 2 Not Adhere: 1 ",
+    #     max_tokens=1000
+    # )
 
+    # Extract the OpenAI response and determine compliance
+    print (openai_response)
+    openai_output = openai_response.choices[0].message.content
+    count = countofadhere.choices[0].message.content
+    print(count)
+    # compliant = "compliant" in openai_output.lower()
+
+    return {"issue": openai_output,"count":count}
