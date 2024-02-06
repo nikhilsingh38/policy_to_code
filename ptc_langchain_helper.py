@@ -93,7 +93,7 @@ def generate_rego_code_for_topic(topic, text):
     return network_details, rego_code
 
 def generate_topics_and_rego_code_from_pdf(pdf_text):
-    keywords = ["access control", "network standards", "rbac", "kubernetes", "network"]
+    keywords = ["Access Control", "Network Standards", "RBAC", "Kubernetes","Network Firewall","IP Table","Container Security"]
     topics = extract_specific_topics(pdf_text, keywords)
     
     #Convert topics to a format suitable for user selection

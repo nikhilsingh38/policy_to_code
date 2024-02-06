@@ -9,27 +9,49 @@ import base64
 
 
 
-st.set_page_config(page_title="Policy Validator", page_icon="📈")
-st.sidebar.markdown('''[<img src='data:image/png;base64,{}' class='img-fluid' width=32 height=32>](https://streamlit.io/)'''.format(img_to_bytes("./pwcLogo.png")), unsafe_allow_html=True)
+st.set_page_config(page_title="Policy Validator", page_icon="📈",layout="wide")
+
+st.markdown("""
+<nav class="custom-navbar">
+    <a href="/">
+        <img src="http://upscalenet.com/wp-content/uploads/2024/02/pwcLogo.png" class="imgCon" alt="Logo">
+    </a>
+    <div class="navContainer">
+        <button class="btn">About Product</button>
+        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
+            <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+            <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
+        </svg>
+    </div>
+</nav>
+""", unsafe_allow_html=True)
+
+with open('./ptc_style.css') as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+
+
+triple_quote = ''' 
+The Policy Validator automates the comparison of Rego code against user-provided policy documents to ensure compliance and correct enforcement. It streamlines policy validation, enhancing security and governance by identifying discrepancies and non-adherence efficiently.'''
+
 st.title("Policy and Code Compliance Checker")
-# st.sidebar.markdown('''[<img src='data:image/png;base64,{}' class='img-fluid' width=32 height=32>](https://streamlit.io/)'''.format(img_to_bytes("logomark_website.png")), unsafe_allow_html=True)
-st.sidebar.header("Policy Validator")
-st.sidebar.markdown(''' 
-The Policy Validator automates the comparison of Rego code against user-provided policy documents to ensure compliance and correct enforcement. It streamlines policy validation, enhancing security and governance by identifying discrepancies and non-adherence efficiently.''')
+st.sidebar.header("Policy Validator",help=triple_quote)
 
 def draw_pie_chart():
-    count_of_adhere = compliance_result["count"]
+    response = compliance_result["count"]
+    lines = response.strip().split('\n')[2:]  # Exclude header rows
+
+    compliance_status = [line.split('|')[2].strip() for line in lines]
     
-    count_of_adhere_dict = literal_eval(count_of_adhere)
     data={
-        "Adherence": count_of_adhere_dict
+        "Adherence": compliance_status
     }
     counts = Counter(data["Adherence"])
     # Calculate the percentage for each adherence type
     total = sum(counts.values())
     sizes = [count / total * 100 for count in counts.values()]
 
-    colors = {"Adhere": "#3EC300", "Doesn't Adhere": "#DD614A"}
+    colors = {"Yes": "#3EC300", "No": "#DD614A"}
 
     default_color = "#CCCCCC"  # Grey color for unspecified keys
 
@@ -40,8 +62,8 @@ def draw_pie_chart():
     ax1.axis('equal')# Equal aspect ratio ensures that pie is drawn as a circle.
 
     # Set the background color
-    fig1.patch.set_facecolor('black')  # Sets the outer background color
-    ax1.set_facecolor('black')  # Sets the inner plot background color
+    fig1.patch.set_facecolor('#0e1117')  # Sets the outer background color
+    ax1.set_facecolor('#0e1117')  # Sets the inner plot background color
 
     # Change the text color to white
     for text in ax1.texts:
@@ -55,16 +77,14 @@ def draw_pie_chart():
     col1, col2 = st.columns(2)
     column_counter = 0
 
-# Iterate over the dictionary items
-    for key, value in count_of_adhere_dict.items():
-    # Use col1 for even counter values, col2 for odd
-        if column_counter % 2 == 0:
-            col1.metric(key, str(value))
-        else:
-            col2.metric(key, str(value))
+    print(compliance_status)
+    yes_count = compliance_status.count('Yes')
+    no_count = compliance_status.count('No')
+
+    col1.metric("Yes", yes_count)
+    col2.metric("No", no_count)
         
-        # Increment the counter
-        column_counter += 1
+        
    
     
 
@@ -78,8 +98,14 @@ if uploaded_policy and uploaded_code:
     code_text = uploaded_code.read()
     compliance_result = langchain_helper.check_compliance_with_openai(policy_text, code_text)
     
-    st.write(compliance_result["issue"])
-    draw_pie_chart()
+    ncol1, ncol2 = st.columns(2)
+    
+    with ncol1:
+        st.write(compliance_result["issue"])
+        st.text("")
+
+    with ncol2:
+        draw_pie_chart()
     
     
     

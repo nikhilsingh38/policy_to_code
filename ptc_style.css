@@ -1,0 +1,82 @@
+html,
+body,
+[class*="css"] {
+  font-family: inter;
+}
+
+.st-emotion-cache-1cypcdb {
+  margin-top: 6.5rem;
+  margin-left: 15px;
+  margin-bottom: 2rem;
+  border-radius: 10px;
+  height: 100vh;
+}
+
+.st-emotion-cache-1avcm0n {
+  z-index: 0;
+}
+
+.st-emotion-cache-aw8l5d {
+  margin-top: 6rem;
+  z-index: 9999999999;
+}
+
+.custom-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #262730;
+  width: 98%;
+  color: white;
+  height: 80px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px 4rem;
+  flex-direction: row;
+  margin: 15px 15px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  z-index: 999999;
+
+}
+
+.st-emotion-cache-1dj0hjr,
+.st-emotion-cache-1m6wrpk {
+  font-size: 1rem;
+  width: 100%;
+  text-align: center;
+}
+
+.imgCon {
+  width: 40px;
+  height: 28px;
+  z-index: 999999;
+  background-size: cover;
+  background-position: center;
+  margin-left: 5rem;
+  cursor: pointer;
+}
+
+.btn {
+  background: #000;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.btn:hover {
+  background-color: #db4e18;
+}
+
+.navContainer {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.st-emotion-cache-y4bq5x {
+  justify-content: center;
+
+}
