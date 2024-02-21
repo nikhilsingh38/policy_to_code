@@ -8,6 +8,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 from dotenv import load_dotenv
+import langchain_helper as policy_validator
 
 
 import os
@@ -112,6 +113,9 @@ def generate_topics_and_rego_code_from_pdf(pdf_text):
         menu_items = response[1]
         st.write("**Rego Code**")
         st.code(menu_items)
+        st.info('Compliance Checking... Please Wait', icon="ℹ️")        
+        return menu_items
+
         # print(query_responses[1])
         # print(menu_items)
     else:

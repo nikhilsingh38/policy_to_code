@@ -49,12 +49,12 @@ body,
 }
 
 .imgCon {
-  width: 40px;
-  height: 28px;
+  width: 50px;
+  /* height: 28px; */
   z-index: 999999;
   background-size: cover;
   background-position: center;
-  margin-left: 5rem;
+  margin-left: 2rem;
   cursor: pointer;
 }
 
