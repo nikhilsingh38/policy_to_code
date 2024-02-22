@@ -1,14 +1,9 @@
 import streamlit as st
-import ptc_langchain_helper as langchain_helper
-import PyPDF2
 import langchain_helper as policy_validator
 from pages import Policy_Validator as policy_ui
-import concurrent.futures
-import time
+from ptc_langchain_helper import extract_text_from_pdf, extract_specific_topics,generate_firewall_rules,generate_rego_code_for_topic
 
 st.set_page_config(page_title="Policy to Code", page_icon="📈",layout="wide")
-
-# st.markdown('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">', unsafe_allow_html=True)
 
 st.markdown("""
 <nav class="custom-navbar">
@@ -28,28 +23,7 @@ st.markdown("""
 with open('./ptc_style.css') as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-
-triple_quote = ''' 
-The "Policy to Code Generator" analyzes PDF documents to categorize policy topics, allowing users to select specific policies for automatic conversion into Rego code. This tool simplifies the translation of textual policies into executable rules for governance and compliance. It streamlines the process of policy enforcement in IT environments by generating code that directly aligns with organizational standards.'''
-new_line = 'first line \n second line'
-
 st.title("Policy to Code Generator")
-# st.sidebar.header("Policy to Code Generator", help=triple_quote)
-# st.sidebar.markdown(''' 
-# The "Policy to Code Generator" analyzes PDF documents to categorize policy topics, allowing users to select specific policies for automatic conversion into Rego code. This tool simplifies the translation of textual policies into executable rules for governance and compliance. It streamlines the process of policy enforcement in IT environments by generating code that directly aligns with organizational standards.''')
-
-# Allow user to upload a PDF file
-def extract_text_from_pdf(file):
-    text = ""
-    if file:
-        pdf_reader = PyPDF2.PdfReader(file)
-        for page_num in range(len(pdf_reader.pages)):
-            page = pdf_reader.pages[page_num]
-            text += page.extract_text()
-    return text
-
-# Allow user to upload a PDF file
-uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
 
 def compliance_checker():
     ncol1, ncol2 = st.columns(2)
@@ -61,13 +35,49 @@ def compliance_checker():
     with ncol2:
         policy_ui.draw_pie_chart(compliance_result)
 
+uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
+    
 if uploaded_file:
     pdf_text = extract_text_from_pdf(uploaded_file)
-
-    response = langchain_helper.generate_topics_and_rego_code_from_pdf(pdf_text)
-    compliance_result = policy_validator.check_compliance_with_gpt35(pdf_text,response)
     
-    compliance_checker()
+    keywords = ["Access Control", "Network Standards", "RBAC", "Kubernetes", "Network Firewall", "IP Table",
+            "Container Security"]
+    topics = extract_specific_topics(pdf_text, keywords)
+
+    topics_for_selection = ["Please select a topic"] + [(topic) for topic in topics]
+    selected_topic = st.selectbox("Pick a Standard", topics_for_selection)
+
+    if selected_topic == "Network Firewall":
+        lang_format_options = ["Firewall Rules", "Rego Code"]
+    elif selected_topic == "RBAC":
+        lang_format_options = ["Access Control", "Rego Code"]
+    else:
+        lang_format_options = ["Rego Code"]
+    
+    if selected_topic != "Please select a topic":    
+        langFormat = st.selectbox("Select the desired language format you want", lang_format_options)
+
+        # if langFormat != "Rego Code":
+        firewall_reference = st.file_uploader(f"Upload a {langFormat} Reference file", type=["txt", "pdf"])
+        
+        if st.button("Submit"):
+            print("Button Clicked")
+            st.info(f'{langFormat} is generating... Please Wait', icon="ℹ️")        
+
+            if langFormat == "Rego Code":
+            # with st.expander("Rego Code"):
+                response = generate_rego_code_for_topic(selected_topic, pdf_text)
+                st.code(response)
+                with st.expander("Compliance Checker"):
+                    st.info(f'Compliance Checking... Please Wait', icon="ℹ️")        
+                    compliance_result = policy_validator.check_compliance_with_gpt35(pdf_text,response)
+                    compliance_checker()
+            else:
+                with st.expander("Firewall Rules"):        
+                    response = generate_firewall_rules(firewall_reference)
+                    st.write(response)
+                    
+    
     
     
     

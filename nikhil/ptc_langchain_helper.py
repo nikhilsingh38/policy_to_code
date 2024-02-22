@@ -20,6 +20,42 @@ def extract_specific_topics(pdf_text: str, keywords: list) -> List[str]:
     matched_topics = [keyword for keyword in keywords if keyword.lower() in pdf_text_lower]
     return matched_topics
 
+def generate_rego_code(llm, topic):
+    prompt_template_network = PromptTemplate(
+        input_variables=['topic'],
+        template=query
+    )
+    
+    network_chain = LLMChain(llm=llm, prompt=prompt_template_network, output_key="network_details")
+    
+    prompt_template_rego = PromptTemplate(
+        input_variables=['network_details'],
+        template=query
+    )
+    
+    rego_code_chain = LLMChain(llm=llm, prompt=prompt_template_rego, output_key="rego_code")
+    
+    input_data = {'topic': topic}
+    response = rego_code_chain(input_data)
+    rego_code = response['rego_code']
+    
+    return rego_code
+
+def generate_firewall_rules(llm, processed_text, firewall_reference):
+    prompt_template_firewall = PromptTemplate(
+        input_variables=['rego_code', 'firewall_reference'],
+        template=query
+    )
+    
+    firewall_chain = LLMChain(llm=llm, prompt=prompt_template_firewall, output_key="firewall_rules")
+    
+    input_data = {'processed_text': processed_text, 'firewall_reference': firewall_reference}
+    response = firewall_chain(input_data)
+    firewall_rules = response['firewall_rules']
+    
+    return firewall_rules
+
+
 def generate_rego_and_firewall_rules(topic, text, firewall_reference):
     global query_responses
 
