@@ -59,30 +59,24 @@ def generate_rego_and_firewall_rules(topic, text, firewall_reference):
     VectorStore = FAISS.from_texts(chunks, embedding=embeddings)
     docs = VectorStore.similarity_search(query=f"{topic} Rego code", k=3)
 
-    # Add vectorized text to the input for the chains
     processed_text = docs[0]  # or a summary of docs[0]
 
-    # Create the SequentialChain with adjusted input
     chain = SequentialChain(
         chains=[network_chain, rego_code_chain, firewall_chain],
         input_variables=['topic', 'processed_text', 'firewall_reference'],
         output_variables=["rego_code", "firewall_rules"]
     )
 
-    # Execute the chain with the input data
     input_data = {'topic': topic, 'processed_text': processed_text, 'firewall_reference': firewall_reference}
     response = chain(input_data)
 
-    # Retrieve the results
     network_details = response.get("network_details", {})
     rego_code = response.get("rego_code", "")
     firewall_rules = response.get("firewall_rules", "")
     query_responses.append((f"{topic} Rego code", rego_code))
     query_responses.append((f"{topic} Firewall rules", firewall_rules))
 
-    # Return the results
     return network_details, rego_code, firewall_rules
-
 
 def extract_text_from_pdf(file):
     text = ""
@@ -93,10 +87,13 @@ def extract_text_from_pdf(file):
             text += page.extract_text()
     return text
 
-def generate_topics_and_rego_code_from_pdf():
-    with st.form(key='my_form'):
-        uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
-        
+# def generate_topics_and_rego_code_from_pdf():
+    
+    # with st.form(key='my_form'):
+    uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
+    
+    
+    if uploaded_file:
         pdf_text = extract_text_from_pdf(uploaded_file)
         
         keywords = ["Access Control", "Network Standards", "RBAC", "Kubernetes", "Network Firewall", "IP Table",
@@ -104,26 +101,31 @@ def generate_topics_and_rego_code_from_pdf():
         topics = extract_specific_topics(pdf_text, keywords)
 
         topics_for_selection = ["Please select a topic"] + [(topic) for topic in topics]
-        
         selected_topic = st.selectbox("Pick a Standard", topics_for_selection)
-        langFormat = st.radio(
-                "Select in which language format you want 👇",
-                ["Firewall Rules", "Access Control", "RBAC"],
-                key="langFormat",
-                horizontal= True,
-        )
-        firewall_reference = st.file_uploader(f"Upload a {langFormat} Reference file", type=["txt", "pdf"])
-        submit_button = st.form_submit_button(label='Submit')
     
+        if selected_topic == "Network Firewall":
+            lang_format_options = ["Firewall Rules", "Rego Code"]
+        elif selected_topic == "RBAC":
+            lang_format_options = ["Access Control", "Rego Code"]
+        else:
+            lang_format_options = ["Rego Code"]
         
-    
+        if selected_topic != "Please select a topic":    
+            langFormat = st.selectbox("Select the desired language format you want", lang_format_options)
 
-    if selected_topic != "Please select a topic" and uploaded_file and langFormat and firewall_reference:
-        response = generate_rego_and_firewall_rules(selected_topic, pdf_text, firewall_reference)
-        
-        # with st.expander("Rego Code"):
-        #   st.code(response[1])
-        with st.expander(langFormat):        
-          st.write(response[2])
-    else:
-        st.info("Please select a upload all the files and select options to generate the code.")
+            # if langFormat != "Rego Code":
+            firewall_reference = st.file_uploader(f"Upload a {langFormat} Reference file", type=["txt", "pdf"])
+            
+            if st.button("Submit"):
+                print("Button Clicked")
+                st.info(f'{langFormat} is generating... Please Wait', icon="ℹ️")        
+
+                response = generate_rego_and_firewall_rules(selected_topic, pdf_text, firewall_reference)
+                if langFormat == "Rego Code":
+                    with st.expander("Rego Code"):
+                        st.code(response[1])
+                else:
+                    with st.expander("Firewall Rules"):        
+                        st.write(response[2])
+        # else:
+        # st.info("Please select a upload all the files and select options to generate the code.")

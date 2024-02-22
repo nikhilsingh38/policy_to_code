@@ -1,7 +1,7 @@
 # main.py
 import streamlit as st
 import PyPDF2
-from ptc_langchain_helper import generate_topics_and_rego_code_from_pdf
+from ptc_langchain_helper import extract_text_from_pdf,extract_specific_topics,generate_rego_and_firewall_rules
 
 st.set_page_config(page_title="Policy to Code", page_icon="📈", layout="wide")
 
@@ -30,24 +30,43 @@ new_line = 'first line \n second line'
 st.title("Policy to Code Generator")
 st.sidebar.header("Policy to Code Generator", help=triple_quote)
 
-# Allow user to upload a PDF file
-# def extract_text_from_pdf(file):
-#     text = ""
-#     if file:
-#         pdf_reader = PyPDF2.PdfReader(file)
-#         for page_num in range(len(pdf_reader.pages)):
-#             page = pdf_reader.pages[page_num]
-#             text += page.extract_text()
-#     return text
 
-# uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
+uploaded_file = st.file_uploader("Upload a PDF file", type=["pdf"])
+    
+if uploaded_file:
+    pdf_text = extract_text_from_pdf(uploaded_file)
+    
+    keywords = ["Access Control", "Network Standards", "RBAC", "Kubernetes", "Network Firewall", "IP Table",
+            "Container Security"]
+    topics = extract_specific_topics(pdf_text, keywords)
 
-# if uploaded_file:
-    # Extract text from the uploaded PDF
-    # pdf_text = extract_text_from_pdf(uploaded_file)
+    topics_for_selection = ["Please select a topic"] + [(topic) for topic in topics]
+    selected_topic = st.selectbox("Pick a Standard", topics_for_selection)
 
-    # firewall_reference = st.file_uploader(f"Upload a {langFormat} Reference file", type=["txt", "pdf"])
-generate_topics_and_rego_code_from_pdf()
+    if selected_topic == "Network Firewall":
+        lang_format_options = ["Firewall Rules", "Rego Code"]
+    elif selected_topic == "RBAC":
+        lang_format_options = ["Access Control", "Rego Code"]
+    else:
+        lang_format_options = ["Rego Code"]
+    
+    if selected_topic != "Please select a topic":    
+        langFormat = st.selectbox("Select the desired language format you want", lang_format_options)
+
+        # if langFormat != "Rego Code":
+        firewall_reference = st.file_uploader(f"Upload a {langFormat} Reference file", type=["txt", "pdf"])
+        
+        if st.button("Submit"):
+            print("Button Clicked")
+            st.info(f'{langFormat} is generating... Please Wait', icon="ℹ️")        
+
+            response = generate_rego_and_firewall_rules(selected_topic, pdf_text, firewall_reference)
+            if langFormat == "Rego Code":
+                with st.expander("Rego Code"):
+                    st.code(response[1])
+            else:
+                with st.expander("Firewall Rules"):        
+                    st.write(response[2])
 
 
     # Use langchain_helper to extract topics and generate rego code

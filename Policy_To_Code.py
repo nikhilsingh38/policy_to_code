@@ -64,12 +64,6 @@ def compliance_checker():
 if uploaded_file:
     pdf_text = extract_text_from_pdf(uploaded_file)
 
-    # progress_text = "Compliance Checking. Please wait."
-    # my_bar = st.progress(0, text=progress_text)
-    # for percent_complete in range(100):
-    #     time.sleep(0.01)  # Simulate some processing time
-    #     my_bar.progress(percent_complete + 1, text=progress_text)
-        
     response = langchain_helper.generate_topics_and_rego_code_from_pdf(pdf_text)
     compliance_result = policy_validator.check_compliance_with_gpt35(pdf_text,response)
     
