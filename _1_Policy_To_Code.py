@@ -1,7 +1,8 @@
 import streamlit as st
+
 import langchain_helper as policy_validator
-from pages import Policy_Validator as policy_ui
-from ptc_langchain_helper import extract_text_from_pdf, extract_specific_topics,generate_firewall_rules,generate_rego_code_for_topic
+from pages import _2_Policy_Validator as policy_ui
+from ptc_langchain_helper import extract_text_from_pdf, extract_specific_topics,generate_firewall_rules,generate_rego_code_for_topic,generate_rego_and_firewall_rules
 
 st.set_page_config(page_title="Policy to Code", page_icon="📈",layout="wide")
 
@@ -63,19 +64,19 @@ if uploaded_file:
         if st.button("Submit"):
             print("Button Clicked")
             st.info(f'{langFormat} is generating... Please Wait', icon="ℹ️")        
-
+            response = generate_rego_and_firewall_rules(selected_topic, pdf_text, firewall_reference)
             if langFormat == "Rego Code":
             # with st.expander("Rego Code"):
-                response = generate_rego_code_for_topic(selected_topic, pdf_text)
-                st.code(response)
-                with st.expander("Compliance Checker"):
-                    st.info(f'Compliance Checking... Please Wait', icon="ℹ️")        
-                    compliance_result = policy_validator.check_compliance_with_gpt35(pdf_text,response)
-                    compliance_checker()
+                rego_code_output = generate_rego_code_for_topic(selected_topic, pdf_text)
+                st.code(rego_code_output[1])
+                # with st.expander("Compliance Checker"):
+                st.info(f'Compliance Checking... Please Wait', icon="ℹ️")        
+                compliance_result = policy_validator.check_compliance_with_gpt35(pdf_text,rego_code_output[1])
+                compliance_checker()
             else:
-                with st.expander("Firewall Rules"):        
-                    response = generate_firewall_rules(firewall_reference)
-                    st.write(response)
+                with st.expander("Firewall Rules"):    
+                    # response = generate_firewall_rules(firewall_reference)
+                    st.write(response[2])
                     
     
     

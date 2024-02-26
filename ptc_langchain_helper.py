@@ -1,3 +1,4 @@
+#ptc_langchain
 import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
@@ -96,7 +97,7 @@ def generate_firewall_rules(firewall_reference):
     chain = SequentialChain(
         chains=[firewall_chain],
         input_variables=['topic', 'processed_text', 'firewall_reference'],
-        output_variables=["rego_code", "firewall_rules"]
+        output_variables=["firewall_rules"]
     )
 
     input_data = {'firewall_reference': firewall_reference}
