@@ -1,7 +1,7 @@
 css = '''
 <style>
 .chat-message {
-    border-radius: 0.5rem; display: flex
+    paddingborder-radius: 0.5rem; display: flex
 }
 .chat-message.bot {
     background-color: #1a1c24

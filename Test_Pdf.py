@@ -32,7 +32,7 @@ st.markdown("""
 with open('./ptc_style.css') as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
         
-client=openai()
+# client=openai()
 
 def get_pdf_text(pdf_docs):
     text = ""
@@ -97,10 +97,6 @@ def handle_userinput(user_question):
 
 def main():
     load_dotenv()
-    # st.set_page_config(page_title="Chat with multiple PDFs",
-    #                    page_icon=":books:")
-    # st.write(css, unsafe_allow_html=True)
-
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
     if "chat_history" not in st.session_state:
